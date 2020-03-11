@@ -17,6 +17,11 @@ inputs:
     required: false
     default: 'docker'
 
+  token:
+    description: 'GITHUB TOKEB'
+    required: true
+    default: '${{ secrets.GITHUB_TOKEN }}'
+
 runs:
   using: 'node12'
   main: 'dist/index.js'
