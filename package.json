@@ -1,0 +1,25 @@
+{
+  "name": "trash-packages",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "author": "Harish Subramanium <hsubra89@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "bootstrap": "yarn install --pure-lockfile",
+    "compile": "ncc build src/index.ts",
+    "dev": "yarn compile --watch",
+    "start": "yarn compile && node dist/index"
+  },
+  "devDependencies": {
+    "@types/ms": "^0.7.31",
+    "@types/node": "^13.9.0",
+    "@zeit/ncc": "^0.21.1",
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "@actions/core": "^1.2.3",
+    "axios": "^0.19.2",
+    "ms": "^2.1.2"
+  }
+}
