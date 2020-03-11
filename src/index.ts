@@ -5,10 +5,10 @@ import { runAction } from './action'
 
 async function init() {
 
-  const GITHUB_TOKEN = process.env.GITHUB_TOKEN
+  const GITHUB_TOKEN = core.getInput('token')
 
   if (!GITHUB_TOKEN) {
-    core.setFailed(`Env "GITHUB_TOKEN" not set. Is this running in a "Github Actions" environment?`)
+    throw new Error(`Env "GITHUB_TOKEN" not set. Is this running in a "Github Actions" environment?`)
   } else {
 
     const owner = core.getInput('owner')
@@ -22,3 +22,4 @@ async function init() {
 }
 
 init()
+  .catch(err => core.setFailed(err.message))

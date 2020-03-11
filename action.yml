@@ -1,0 +1,26 @@
+
+name: 'trash-packages'
+description: 'Prune Github packages based on minAge and downloadCount'
+
+inputs:
+  minAge:
+    description: 'Minimum age of the image before it gets deleted'
+    required: true
+
+  maxDownloads:
+    description: 'Maximum number of downloads this package can have after which it can no longer be deleted'
+    required: false
+    default: '0'
+
+  packageType:
+    description: 'Type of package that should be pruned. NPM, MAVEN, RUBYGEMS, DOCKER, DEBIAN, NUGET, PYPI'
+    required: false
+    default: 'docker'
+
+  token:
+    description: 'GITHUB_TOKEN'
+    required: true
+
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
