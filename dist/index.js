@@ -3835,7 +3835,7 @@ query fetchPackageVersions($owner: String!, $repo: String!) {
 function buildDeletePackageMutation(versionIds) {
     return `
 mutation deletePackageVersion {
-  ${versionIds.map(vid => `${vid}: deletePackageVersion(input: {packageVersionId : "${vid}"}) { success }`).join('\n')}
+  ${versionIds.map(vid => `${replaceNonAlphaNumericWithNothing(vid)}: deletePackageVersion(input: {packageVersionId : "${vid}"}) { success }`).join('\n')}
 }
   `;
 }
@@ -3874,14 +3874,19 @@ function runAction(githubToken, settings) {
                 const mutationQuery = buildDeletePackageMutation(versionIds);
                 const result = yield runGraphQLQuery(githubToken, mutationQuery);
                 const errors = result.errors || [];
-                for (const [key, value] of Object.entries(result.data)) {
-                    if (!value || !value.success) {
-                        const relatedError = errors.find(e => e.path[0] === key);
-                        const resString = relatedError ? relatedError.message : 'Failed';
-                        core.error(`❌ ${key}: ${resString}`);
-                    }
-                    else {
-                        core.info(`✅ ${key}`);
+                if (!result.data) {
+                    core.error(JSON.stringify(errors));
+                }
+                else {
+                    for (const [key, value] of Object.entries(result.data)) {
+                        if (!value || !value.success) {
+                            const relatedError = errors.find(e => e.path[0] === key);
+                            const resString = relatedError ? relatedError.message : 'Failed';
+                            core.error(`❌ ${key}: ${resString}`);
+                        }
+                        else {
+                            core.info(`✅ ${key}`);
+                        }
                     }
                 }
             }
@@ -3906,6 +3911,9 @@ function runGraphQLQuery(githubToken, query, variables) {
         }
     })
         .then(res => res.data);
+}
+function replaceNonAlphaNumericWithNothing(str) {
+    return str.replace(/\W/g, '');
 }
 
 
