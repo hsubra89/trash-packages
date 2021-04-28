@@ -15,7 +15,7 @@ async function init() {
     const repo = core.getInput('repo')
     const minAge = ms(core.getInput('minAge', { required: true }))
     const maxDownloads = parseInt(core.getInput('maxDownloads'), 10) || 0
-    const packageType = core.getInput('packageType') || 'docker'
+    const packageType = (core.getInput('packageType') || 'docker').toUpperCase()
 
     await runAction(GITHUB_TOKEN, { minAge, maxDownloads, repo, owner, packageType })
   }
