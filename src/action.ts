@@ -88,11 +88,9 @@ interface MutationResponse {
 
 function buildDeletePackageMutation(versionIds: string[]) {
 
-  return `
-mutation deletePackageVersion {
-  ${ versionIds.map(vid => `${vid}: deletePackageVersion(input: {packageVersionId : "${vid}"}) { success }`).join('\n')}
-}
-  `
+  return `mutation deletePackageVersion {
+  ${ versionIds.map(vid => `${replaceNonAlphaNumericWithNothing(vid)}: deletePackageVersion(input: {packageVersionId : "${vid}"}) { success }`).join('\n')}
+}`
 }
 
 export async function runAction(githubToken: string, settings: ActionSettings) {
@@ -106,7 +104,7 @@ export async function runAction(githubToken: string, settings: ActionSettings) {
     .map(packageNodes => {
       const versionNodes = packageNodes.versions.nodes
         // Package Type Filter
-        .filter(n => n.package.packageType === settings.packageType.toUpperCase())
+        .filter(n => n.package.packageType === settings.packageType)
         // Max downloads filter
         .filter(n => n.statistics.downloadsTotalCount <= settings.maxDownloads)
         // Max age filter
@@ -134,22 +132,26 @@ export async function runAction(githubToken: string, settings: ActionSettings) {
     core.info(`Package: ${fv.name}`)
 
     if (fv.versions.nodes.length === 0) {
-      core.info(`-> No versions found that match deletion critera`)
+      core.info(`-> No versions found that match deletion criteria`)
     } else {
       const versionIds = fv.versions.nodes.map(n => n.id)
       const mutationQuery = buildDeletePackageMutation(versionIds)
-      const result = await runGraphQLQuery<MutationResponse>(githubToken, mutationQuery)
 
+      const result = await runGraphQLQuery<MutationResponse>(githubToken, mutationQuery)
       const errors = result.errors || []
 
-      for (const [key, value] of Object.entries(result.data)) {
+      if (!result.data) {
+        core.error(JSON.stringify(errors))
+      } else {
+        for (const [key, value] of Object.entries(result.data)) {
 
-        if (!value || !value.success) {
-          const relatedError = errors.find(e => e.path[0] === key)
-          const resString = relatedError ? relatedError.message : 'Failed'
-          core.error(`❌ ${key}: ${resString}`)
-        } else {
-          core.info(`✅ ${key}`)
+          if (!value || !value.success) {
+            const relatedError = errors.find(e => e.path[0] === key)
+            const resString = relatedError ? relatedError.message : 'Failed'
+            core.error(`❌ ${key}: ${resString}`)
+          } else {
+            core.info(`✅ ${key}`)
+          }
         }
       }
     }
@@ -174,4 +176,8 @@ function runGraphQLQuery<T>(githubToken: string, query: string, variables?: { [k
       }
     })
     .then(res => res.data as T)
+}
+
+function replaceNonAlphaNumericWithNothing(str: string) {
+  return str.replace(/\W/g, '')
 }
